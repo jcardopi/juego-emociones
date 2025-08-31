@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Isla de las Emociones</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Poppins:wght@400;600&display=swap');
+
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #f1c40f;
+            --background-color: #a9e2ff;
+            --text-color: #3d3d3d;
+            --font-main: 'Poppins', sans-serif;
+            --font-title: 'Fredoka One', cursive;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            perspective: 1000px;
+        }
+
+        .game-container {
+            width: 95%;
+            max-width: 800px;
+            height: 95vh;
+            max-height: 600px;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 0.6s;
+            transform: scale(0.8);
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .screen.active {
+            transform: scale(1);
+            opacity: 1;
+            visibility: visible;
+            z-index: 1;
+        }
+
+        #screen-1 { background: url('bg_bienvenida.png') no-repeat center center/cover; }
+        #screen-2 { background: url('bg_nivel1.png') no-repeat center center/cover; }
+        #screen-3 { background: url('bg_nivel2.png') no-repeat center center/cover; }
+        #screen-4 { background: url('bg_nivel3.png') no-repeat center center/cover; }
+        #screen-5 { background: url('bg_nivel4.png') no-repeat center center/cover; }
+        #screen-6 { background: url('bg_final.png') no-repeat center center/cover; }
+
+        h1, h2 {
+            font-family: var(--font-title);
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 1.2rem;
+            color: #fff;
+            background-color: rgba(0, 0, 0, 0.55);
+            padding: 10px 20px;
+            border-radius: 15px;
+            max-width: 80%;
+            margin-bottom: 30px;
+        }
+
+        .button {
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-family: var(--font-title);
+            font-size: 1.3rem;
+            cursor: pointer;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+        }
+
+        .lumi {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 150px;
+            height: auto;
+            animation: bounce 2s infinite ease-in-out;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .drag-zone {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+            margin-top: 40px;
+        }
+        .draggable {
+            font-size: 5rem;
+            cursor: grab;
+            user-select: none;
+            transition: transform 0.2s;
+        }
+        .draggable:active {
+            cursor: grabbing;
+            transform: scale(1.2);
+        }
+        .droppable {
+            width: 150px;
+            height: 150px;
+            background-image: url('cofre.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            transition: transform 0.3s ease;
+        }
+        .droppable.hovered {
+            transform: scale(1.1);
+        }
+
+        .emotions-container { display: flex; gap: 20px; margin-bottom: 30px; }
+        .emotion-card { background: #fff; border-radius: 15px; padding: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .emotion-card img { width: 120px; height: 120px; border-radius: 10px; object-fit: cover; }
+        .options-container { display: flex; gap: 15px; }
+        .option-btn { background-color: #fff; border: 2px solid var(--primary-color); padding: 10px 20px; border-radius: 30px; cursor: pointer; font-size: 1rem; transition: background-color 0.2s; }
+        .option-btn:hover { background-color: #e0f7fa; }
+
+        .balloon-container { width: 200px; height: 250px; position: relative; margin: 30px 0; }
+        .balloon { width: 100%; height: 100%; background-color: #e74c3c; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; animation: inflate-deflate 8s ease-in-out forwards; }
+        @keyframes inflate-deflate { 0%, 100% { transform: scale(0.1); } 50% { transform: scale(1); } }
+        .balloon::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); width: 10px; height: 20px; background: #c0392b; border-radius: 0 0 5px 5px; }
+
+        .friendship-options { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .friendship-option { background-color: rgba(255, 255, 255, 0.9); padding: 20px; border-radius: 15px; cursor: pointer; border: 3px solid transparent; transition: all 0.2s; }
+        .friendship-option.selected { border-color: var(--secondary-color); transform: scale(1.05); }
+        .friendship-option:hover { transform: scale(1.05); }
+
+        .badge { background-color: #fff; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; gap: 15px; color: var(--text-color); width: 300px; }
+        .badge-star { font-size: 3rem; color: var(--secondary-color); }
+        .badge-title { font-family: var(--font-title); font-size: 1.5rem; color: var(--primary-color); }
+
+        .star-container { position: absolute; top: 20px; right: 20px; display: flex; gap: 10px; }
+        .star { font-size: 2.5rem; color: #bdc3c7; transition: color 0.5s, transform 0.5s; }
+        .star.earned { color: var(--secondary-color); transform: scale(1.2) rotate(360deg); }
+
+        .star-animation { position: fixed; font-size: 10rem; color: var(--secondary-color); z-index: 1000; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); animation: star-pop 1.5s forwards; text-shadow: 0 0 20px gold; }
+        @keyframes star-pop { 0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 0; } 50% { transform: translate(-50%, -50%) scale(1.5) rotate(180deg); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1) rotate(360deg); opacity: 0; } }
+
+        /* --- ESTILOS DEL MODAL DE ALERTA PERSONALIZADO --- */
+        #custom-alert-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+        #custom-alert-box {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            animation: fadeIn 0.3s ease-out;
+        }
+        #custom-alert-message {
+            font-size: 1.3rem;
+            color: var(--text-color);
+            background-color: transparent;
+            margin-bottom: 25px;
+        }
+        #custom-alert-button {
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-family: var(--font-title);
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        #custom-alert-button:hover { transform: scale(1.05); }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="star-container">
+            <div id="star1" class="star">★</div>
+            <div id="star2" class="star">★</div>
+            <div id="star3" class="star">★</div>
+            <div id="star4" class="star">★</div>
+        </div>
+        <div id="screen-1" class="screen active">
+            <img src="lumi.png" alt="Lumi el perrito" class="lumi">
+            <h1>¡Bienvenido a la Isla de las Emociones!</h1>
+            <p>¡Hola! Soy Lumi y te invito a descubrir la Isla de las Emociones. ¿Me ayudas a encontrar las estrellas mágicas?</p>
+            <button class="button" onclick="changeScreen(2)">Comenzar la aventura</button>
+        </div>
+        <div id="screen-2" class="screen">
+            <h2>Nivel 1: Caritas Felices</h2>
+            <p>Arrastra la carita feliz hasta el cofre mágico.</p>
+            <div class="drag-zone">
+                <div id="happy-face" class="draggable" draggable="true">😊</div>
+                <div id="chest" class="droppable"></div>
+            </div>
+        </div>
+        <div id="screen-3" class="screen">
+            <h2>Nivel 2: El Espejo de las Emociones</h2>
+            <div class="emotions-container">
+                <div class="emotion-card">
+                    <img src="nino_triste.png" alt="Niño triste">
+                </div>
+            </div>
+            <p>¿Qué emoción sientes que tiene este niño?</p>
+            <div class="options-container">
+                <button class="option-btn" onclick="checkEmotion('feliz')">Feliz</button>
+                <button class="option-btn" onclick="checkEmotion('triste')">Triste</button>
+                <button class="option-btn" onclick="checkEmotion('enojado')">Enojado</button>
+            </div>
+        </div>
+        <div id="screen-4" class="screen">
+            <h2>Nivel 3: Respiro Mágico</h2>
+            <p>Ayuda a Lumi a inflar el globo contando 1… 2… 3… Ahora suéltalo y respira profundo.</p>
+            <div class="balloon-container"><div class="balloon"></div></div>
+        </div>
+        <div id="screen-5" class="screen">
+            <h2>Nivel 4: El Puente de la Amistad</h2>
+            <p>Elige las acciones que construyen el puente de la amistad. (Selecciona dos)</p>
+            <div class="friendship-options">
+                <div class="friendship-option" data-correct="true" onclick="toggleSelect(this)">Compartir un juguete</div>
+                <div class="friendship-option" data-correct="true" onclick="toggleSelect(this)">Abrazar</div>
+                <div class="friendship-option" data-correct="false" onclick="toggleSelect(this)">Gritar</div>
+                <div class="friendship-option" data-correct="false" onclick="toggleSelect(this)">Pegar</div>
+            </div>
+            <button class="button" style="margin-top: 20px;" onclick="checkFriendship()">Verificar</button>
+        </div>
+        <div id="screen-6" class="screen">
+            <h1>¡Lo lograste!</h1>
+            <p>Has reunido las 4 estrellas mágicas. Ahora eres un Guardián de la Calma. Recuerda que siempre puedes respirar, identificar tus emociones y elegir lo mejor.</p>
+            <div class="badge">
+                <div class="badge-star">🏆</div>
+                <div class="badge-title">Guardián de la Calma</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="custom-alert-overlay">
+        <div id="custom-alert-box">
+            <p id="custom-alert-message">Este es un mensaje de prueba.</p>
+            <button id="custom-alert-button" onclick="hideCustomAlert()">Entendido</button>
+        </div>
+    </div>
+
+    <script>
+        function showCustomAlert(message) {
+            document.getElementById('custom-alert-message').textContent = message;
+            document.getElementById('custom-alert-overlay').style.display = 'flex';
+        }
+
+        function hideCustomAlert() {
+            document.getElementById('custom-alert-overlay').style.display = 'none';
+        }
+
+        let currentScreen = 1;
+        let starsCollected = 0;
+        const bellSound = new Audio('campanita.wav');
+
+        function changeScreen(screenNumber) {
+            const current = document.getElementById(`screen-${currentScreen}`);
+            const next = document.getElementById(`screen-${screenNumber}`);
+            if (current) current.classList.remove('active');
+            if (next) next.classList.add('active');
+            currentScreen = screenNumber;
+            if (screenNumber === 4) {
+                setTimeout(() => { if (starsCollected < 3) showStarAnimation(3); }, 8000);
+            }
+        }
+
+        function showStarAnimation(starIndex) {
+            bellSound.play();
+            const starAnimation = document.createElement('div');
+            starAnimation.classList.add('star-animation');
+            starAnimation.innerHTML = '★';
+            document.body.appendChild(starAnimation);
+            setTimeout(() => {
+                document.getElementById(`star${starIndex}`).classList.add('earned');
+                starsCollected++;
+                document.body.removeChild(starAnimation);
+                setTimeout(() => { changeScreen(currentScreen + 1); }, 1000);
+            }, 1500);
+        }
+
+        const draggable = document.getElementById('happy-face');
+        const droppable = document.getElementById('chest');
+        draggable.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', e.target.id); setTimeout(() => { e.target.style.visibility = 'hidden'; }, 0); });
+        draggable.addEventListener('dragend', (e) => { e.target.style.visibility = 'visible'; });
+        droppable.addEventListener('dragover', (e) => { e.preventDefault(); droppable.classList.add('hovered'); });
+        droppable.addEventListener('dragleave', () => { droppable.classList.remove('hovered'); });
+        droppable.addEventListener('drop', (e) => {
+            e.preventDefault();
+            droppable.classList.remove('hovered');
+            const data = e.dataTransfer.getData('text/plain');
+            if (data === 'happy-face' && starsCollected < 1) {
+                const draggedElement = document.getElementById(data);
+                draggedElement.style.display = 'none';
+                droppable.style.transform = 'scale(1.2)';
+                showStarAnimation(1);
+            }
+        });
+
+        function checkEmotion(emotion) {
+            if (starsCollected < 2) {
+                if (emotion === 'triste') {
+                    showStarAnimation(2);
+                } else {
+                    showCustomAlert("Inténtalo de nuevo. Observa bien su carita.");
+                }
+            }
+        }
+
+        function toggleSelect(element) { element.classList.toggle('selected'); }
+        function checkFriendship() {
+            if (starsCollected < 4) {
+                const selectedOptions = document.querySelectorAll('.friendship-option.selected');
+                let correctCount = 0;
+                let incorrectCount = 0;
+                selectedOptions.forEach(option => {
+                    if (option.dataset.correct === 'true') { correctCount++; } else { incorrectCount++; }
+                });
+                if (correctCount === 2 && incorrectCount === 0 && selectedOptions.length === 2) {
+                    showStarAnimation(4);
+                } else {
+                    showCustomAlert('¡Casi! Revisa tus respuestas. Elige solo las dos acciones que construyen amistad.');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
